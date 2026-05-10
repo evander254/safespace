@@ -42,8 +42,13 @@ function TherapistLayout() {
       navigate({ to: "/auth", search: { mode: "signin" } });
     } else if (!onboardingCompleted) {
       navigate({ to: "/therapist-onboarding" });
+    } else if (!isApproved) {
+      const allowedPaths = ["/therapist", "/therapist/", "/therapist/profile"];
+      if (!allowedPaths.includes(window.location.pathname)) {
+        navigate({ to: "/therapist" });
+      }
     }
-  }, [user, roles, loading, onboardingCompleted, navigate]);
+  }, [user, roles, loading, onboardingCompleted, isApproved, navigate]);
 
   const { data: unreadNotifications } = useQuery({
     queryKey: ["unread-notifications", user?.id],
@@ -57,19 +62,24 @@ function TherapistLayout() {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!user,
+    enabled: !!user && isApproved,
   });
 
   if (loading || !user) return null;
 
-  const navItems = [
-    { title: "Dashboard", icon: LayoutDashboard, to: "/therapist" },
-    { title: "Bookings", icon: Calendar, to: "/therapist/bookings" },
-    { title: "Messages", icon: MessageSquare, to: "/therapist/messages" },
-    { title: "Notifications", icon: Bell, to: "/therapist/notifications", badge: unreadNotifications },
-    { title: "Video Sessions", icon: Video, to: "/therapist/sessions" },
-    { title: "Profile", icon: User, to: "/therapist/profile" },
-  ];
+  const navItems = isApproved 
+    ? [
+        { title: "Dashboard", icon: LayoutDashboard, to: "/therapist" },
+        { title: "Bookings", icon: Calendar, to: "/therapist/bookings" },
+        { title: "Messages", icon: MessageSquare, to: "/therapist/messages" },
+        { title: "Notifications", icon: Bell, to: "/therapist/notifications", badge: unreadNotifications },
+        { title: "Video Sessions", icon: Video, to: "/therapist/sessions" },
+        { title: "Profile", icon: User, to: "/therapist/profile" },
+      ]
+    : [
+        { title: "Approval Status", icon: ShieldCheck, to: "/therapist" },
+        { title: "My Profile", icon: User, to: "/therapist/profile" },
+      ];
 
   return (
     <SidebarProvider>

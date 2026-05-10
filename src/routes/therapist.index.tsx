@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { 
   Calendar, 
   MessageSquare, 
@@ -178,7 +178,9 @@ function TherapistDashboard() {
             Once approved, you'll be able to accept bookings and start sessions.
           </p>
           <div className="flex justify-center gap-4 pt-4">
-            <Button variant="outline" className="rounded-full">View My Profile</Button>
+            <Button variant="outline" className="rounded-full" asChild>
+              <Link to="/therapist/profile">View My Profile</Link>
+            </Button>
             <Button variant="outline" className="rounded-full">Help Center</Button>
           </div>
         </div>
