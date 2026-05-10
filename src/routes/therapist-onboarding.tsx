@@ -88,7 +88,7 @@ function TherapistOnboarding() {
       navigate({ to: "/auth", search: { mode: "signin" } });
       return;
     }
-    if (onboardingCompleted && isApproved) {
+    if (onboardingCompleted) {
       navigate({ to: "/therapist" });
     }
   }, [user, roles, onboardingCompleted, isApproved, loading, navigate]);

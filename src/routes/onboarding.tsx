@@ -427,7 +427,7 @@ const STEP_META = [
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading, roles } = useAuth();
+  const { user, loading: authLoading, roles, intakeCompleted } = useAuth();
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState<"right" | "left">("right");
   const [data, setData] = useState<IntakeData>(INITIAL);
@@ -447,10 +447,10 @@ function OnboardingPage() {
       return;
     }
 
-    if (user?.user_metadata?.intake_completed) {
+    if (intakeCompleted) {
       navigate({ to: "/therapists" });
     }
-  }, [authLoading, user, roles, navigate]);
+  }, [authLoading, user, roles, intakeCompleted, navigate]);
 
   const set = useCallback((partial: Partial<IntakeData>) => setData((d) => ({ ...d, ...partial })), []);
 

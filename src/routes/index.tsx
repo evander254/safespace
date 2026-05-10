@@ -31,10 +31,10 @@ function Landing() {
           } else {
             navigate({ to: "/therapist-onboarding" });
           }
-        } else if (roles.includes("client") && !intakeCompleted) {
-          navigate({ to: "/onboarding" });
-        } else {
+        } else if (intakeCompleted) {
           navigate({ to: "/therapists" });
+        } else {
+          navigate({ to: "/onboarding" });
         }
       }
     }

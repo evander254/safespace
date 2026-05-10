@@ -26,7 +26,7 @@ const schema = z.object({
 function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const { user, roles } = useAuth();
+  const { user, roles, onboardingCompleted, intakeCompleted } = useAuth();
   const [mode, setMode] = useState<"signin" | "signup">(search.mode);
   const [role, setRole] = useState<"client" | "therapist">("client");
   const [email, setEmail] = useState("");
@@ -36,15 +36,21 @@ function AuthPage() {
 
   useEffect(() => {
     if (user && roles.length > 0) {
-      if (roles.includes("therapist")) {
-        navigate({ to: "/therapist-onboarding" });
-      } else if (user.user_metadata?.intake_completed) {
+      if (roles.includes("admin")) {
+        navigate({ to: "/admin" });
+      } else if (roles.includes("therapist")) {
+        if (onboardingCompleted) {
+          navigate({ to: "/therapist" });
+        } else {
+          navigate({ to: "/therapist-onboarding" });
+        }
+      } else if (intakeCompleted) {
         navigate({ to: "/therapists" });
       } else {
         navigate({ to: "/onboarding" });
       }
     }
-  }, [user, roles, navigate]);
+  }, [user, roles, onboardingCompleted, intakeCompleted, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +101,13 @@ function AuthPage() {
         }
 
         if (isTherapist) {
-          navigate({ to: "/therapist-onboarding" });
+          // Quick check for completion from DB since useAuth might not have updated yet
+          const { data: th } = await supabase.from("therapists").select("onboarding_completed").eq("id", signInData.user.id).single();
+          if (th?.onboarding_completed) {
+            navigate({ to: "/therapist" });
+          } else {
+            navigate({ to: "/therapist-onboarding" });
+          }
           return;
         }
 
@@ -106,6 +118,7 @@ function AuthPage() {
           return;
         }
         toast.success("Welcome back.");
+        navigate({ to: "/therapists" });
       }
     } catch (err) {
       toast.error((err as Error).message);
