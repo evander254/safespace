@@ -82,6 +82,8 @@ function TherapistOnboarding() {
   });
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user || !roles.includes("therapist")) {
       navigate({ to: "/auth", search: { mode: "signin" } });
       return;
@@ -89,7 +91,7 @@ function TherapistOnboarding() {
     if (onboardingCompleted && isApproved) {
       navigate({ to: "/therapist" });
     }
-  }, [user, roles, onboardingCompleted, isApproved, navigate]);
+  }, [user, roles, onboardingCompleted, isApproved, loading, navigate]);
 
   const updateFormData = (data: Partial<typeof formData>) => {
     setFormData(prev => ({ ...prev, ...data }));

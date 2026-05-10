@@ -427,21 +427,30 @@ const STEP_META = [
 
 function OnboardingPage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, roles } = useAuth();
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState<"right" | "left">("right");
   const [data, setData] = useState<IntakeData>(INITIAL);
   const [saving, setSaving] = useState(false);
 
-  // Guard: must be logged in
+  // Guard: must be logged in and must be a client
   useEffect(() => {
-    if (!authLoading && !user) navigate({ to: "/auth", search: { mode: "signup" } });
-  }, [authLoading, user, navigate]);
+    if (authLoading) return;
+    
+    if (!user) {
+      navigate({ to: "/auth", search: { mode: "signup" } });
+      return;
+    }
 
-  // Guard: already completed
-  useEffect(() => {
-    if (user?.user_metadata?.intake_completed) navigate({ to: "/therapists" });
-  }, [user, navigate]);
+    if (roles.includes("therapist")) {
+      navigate({ to: "/therapist-onboarding" });
+      return;
+    }
+
+    if (user?.user_metadata?.intake_completed) {
+      navigate({ to: "/therapists" });
+    }
+  }, [authLoading, user, roles, navigate]);
 
   const set = useCallback((partial: Partial<IntakeData>) => setData((d) => ({ ...d, ...partial })), []);
 

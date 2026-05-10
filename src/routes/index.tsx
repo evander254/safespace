@@ -21,19 +21,21 @@ function Landing() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!authLoading && user && roles.length > 0) {
-      if (roles.includes("admin")) {
-        navigate({ to: "/admin" });
-      } else if (roles.includes("therapist")) {
-        if (onboardingCompleted) {
-          navigate({ to: "/therapist" });
+    if (!authLoading && user) {
+      if (roles.length > 0) {
+        if (roles.includes("admin")) {
+          navigate({ to: "/admin" });
+        } else if (roles.includes("therapist")) {
+          if (onboardingCompleted) {
+            navigate({ to: "/therapist" });
+          } else {
+            navigate({ to: "/therapist-onboarding" });
+          }
+        } else if (roles.includes("client") && !intakeCompleted) {
+          navigate({ to: "/onboarding" });
         } else {
-          navigate({ to: "/therapist-onboarding" });
+          navigate({ to: "/therapists" });
         }
-      } else if (roles.includes("client") && !intakeCompleted) {
-        navigate({ to: "/onboarding" });
-      } else {
-        navigate({ to: "/therapists" });
       }
     }
   }, [authLoading, user, intakeCompleted, roles, onboardingCompleted, navigate]);
@@ -60,7 +62,7 @@ function Landing() {
         <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2 md:py-24 md:gap-16 items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/70 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5 text-primary" /> Built for Kenya · M-Pesa ready
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
             </span>
             <h1 className="mt-5 text-4xl font-semibold leading-[1.05] tracking-tight md:text-6xl">
               A calmer mind is one <span className="bg-[image:var(--gradient-primary)] bg-clip-text text-transparent">conversation</span> away.

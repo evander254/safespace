@@ -35,7 +35,7 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && roles.length > 0) {
       if (roles.includes("therapist")) {
         navigate({ to: "/therapist-onboarding" });
       } else if (user.user_metadata?.intake_completed) {
@@ -60,7 +60,9 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: role === "therapist" 
+              ? `${window.location.origin}/therapist-onboarding` 
+              : `${window.location.origin}/onboarding`,
             data: { 
               full_name: fullName,
               role: role
