@@ -79,7 +79,7 @@ function AdminDashboard() {
     }
   }, [roles, authLoading, navigate]);
 
-  const [recentClients, setRecentClients] = useState<any[]>([]);
+  const [nonApprovedTherapists, setNonApprovedTherapists] = useState<any[]>([]);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -99,7 +99,7 @@ function AdminDashboard() {
           newTherapistsWeek: (data as any).new_therapists_week
         });
         setPendingTherapists((data as any).recent_pending_therapists || []);
-        setRecentClients((data as any).recent_clients || []);
+        setNonApprovedTherapists((data as any).non_approved_therapists || []);
       }
 
       // Fetch Commissions (still using the table for now, but we could RPC this too if needed)
@@ -327,27 +327,40 @@ function AdminDashboard() {
             </Card>
           </div>
 
-          {/* New Row for Recent Clients */}
+          {/* Row for Non-Approved Therapists */}
           <div className="grid grid-cols-1 gap-8">
             <Card className="border-black/[0.03] bg-white shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">Newly Joined Clients</CardTitle>
-                <CardDescription>Latest users to register on the platform</CardDescription>
+                <CardTitle className="text-lg">Pending Therapist Approvals</CardTitle>
+                <CardDescription>Therapists awaiting clinical vetting or profile completion</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                  {recentClients.map((client) => (
-                    <div key={client.id} className="flex flex-col items-center text-center p-6 rounded-2xl border border-black/[0.03] bg-black/[0.01] hover:bg-black/[0.02] transition-all">
-                      <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xl mb-4">
-                        {client.full_name?.charAt(0)}
+                {nonApprovedTherapists.length === 0 ? (
+                  <div className="h-[200px] flex flex-col items-center justify-center text-muted-foreground italic border-2 border-dashed border-black/[0.05] rounded-2xl">
+                    <CheckCircle className="h-8 w-8 mb-2 text-emerald-500/40" />
+                    All therapists are currently approved
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {nonApprovedTherapists.map((therapist) => (
+                      <div key={therapist.id} className="flex flex-col items-center text-center p-6 rounded-2xl border border-black/[0.03] bg-black/[0.01] hover:bg-black/[0.02] transition-all">
+                        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-xl mb-4">
+                          {therapist.full_name?.charAt(0)}
+                        </div>
+                        <div className="font-bold text-sm line-clamp-1">{therapist.full_name}</div>
+                        <div className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">
+                          Joined {new Date(therapist.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </div>
+                        <Badge variant="outline" className={cn(
+                          "mt-3 text-[9px] uppercase tracking-tighter",
+                          therapist.onboarding_completed ? "text-emerald-600 bg-emerald-50 border-emerald-100" : "text-amber-600 bg-amber-50 border-amber-100"
+                        )}>
+                          {therapist.onboarding_completed ? "Ready for review" : "In Progress"}
+                        </Badge>
                       </div>
-                      <div className="font-bold text-sm line-clamp-1">{client.full_name}</div>
-                      <div className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">
-                        Joined {new Date(client.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

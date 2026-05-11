@@ -1,0 +1,76 @@
+-- Update admin dashboard statistics RPC to show non-approved therapists instead of recent clients
+-- Created: 2026-05-11
+
+CREATE OR REPLACE FUNCTION public.get_admin_dashboard_stats()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+    result jsonb;
+    user_count int;
+    therapist_count int;
+    approved_count int;
+    total_commissions numeric;
+    booking_stats jsonb;
+    new_users_week int;
+    new_therapists_week int;
+    weekly_commissions numeric;
+    recent_pending_therapists jsonb;
+    non_approved_therapists jsonb;
+BEGIN
+    -- 1. General counts
+    SELECT count(*) INTO user_count FROM public.profiles;
+    SELECT count(*) INTO therapist_count FROM public.therapists;
+    SELECT count(*) INTO approved_count FROM public.therapists WHERE is_approved = true;
+    
+    -- 2. Commissions
+    SELECT coalesce(sum(amount), 0) INTO total_commissions FROM public.commissions;
+    
+    -- 3. Booking stats
+    SELECT jsonb_build_object(
+        'total', count(*),
+        'completed', count(*) FILTER (WHERE status = 'completed'),
+        'confirmed', count(*) FILTER (WHERE status = 'confirmed'),
+        'pending', count(*) FILTER (WHERE status = 'pending'),
+        'cancelled', count(*) FILTER (WHERE status = 'cancelled')
+    ) INTO booking_stats FROM public.bookings;
+    
+    -- 4. Weekly growth
+    SELECT count(*) INTO new_users_week FROM public.profiles WHERE created_at > now() - interval '7 days';
+    SELECT count(*) INTO new_therapists_week FROM public.therapists WHERE created_at > now() - interval '7 days';
+    SELECT coalesce(sum(amount), 0) INTO weekly_commissions FROM public.commissions WHERE created_at > now() - interval '7 days';
+    
+    -- 5. Recent Lists
+    -- Therapists who finished onboarding but are not approved (for the applications card)
+    SELECT jsonb_agg(t) INTO recent_pending_therapists FROM (
+        SELECT * FROM public.therapists 
+        WHERE onboarding_completed = true AND is_approved = false 
+        ORDER BY created_at DESC LIMIT 5
+    ) t;
+    
+    -- All unapproved therapists (for the bottom grid)
+    SELECT jsonb_agg(t) INTO non_approved_therapists FROM (
+        SELECT * FROM public.therapists 
+        WHERE is_approved = false 
+        ORDER BY created_at DESC LIMIT 10
+    ) t;
+
+    -- Build final result
+    result := jsonb_build_object(
+        'user_count', user_count,
+        'therapist_count', therapist_count,
+        'approved_therapists', approved_count,
+        'total_commissions', total_commissions,
+        'booking_stats', booking_stats,
+        'new_users_week', new_users_week,
+        'new_therapists_week', new_therapists_week,
+        'weekly_commissions', weekly_commissions,
+        'recent_pending_therapists', coalesce(recent_pending_therapists, '[]'::jsonb),
+        'non_approved_therapists', coalesce(non_approved_therapists, '[]'::jsonb)
+    );
+    
+    RETURN result;
+END;
+$$;

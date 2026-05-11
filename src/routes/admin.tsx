@@ -59,7 +59,7 @@ function AdminLayout() {
     { label: "Dashboard", icon: LayoutDashboard, to: "/admin" },
     { label: "Applications", icon: Stethoscope, to: "/admin/applications" },
     { label: "Therapists", icon: Users, to: "/admin/therapists" },
-    { label: "Financials", icon: DollarSign, to: "/admin" },
+    { label: "Financials", icon: DollarSign, to: "/admin/financials" },
     { label: "Bookings", icon: Calendar, to: "/admin/bookings" }, 
     { label: "Users", icon: Users, to: "/admin/users" },
     { label: "Settings", icon: Settings, to: "/admin" },

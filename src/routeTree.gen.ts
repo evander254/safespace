@@ -23,6 +23,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TherapistsIndexRouteImport } from './routes/therapists.index'
 import { Route as TherapistIndexRouteImport } from './routes/therapist.index'
+import { Route as ProfileIndexRouteImport } from './routes/profile.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as TherapistsIdRouteImport } from './routes/therapists.$id'
 import { Route as TherapistSessionsRouteImport } from './routes/therapist.sessions'
@@ -30,8 +31,10 @@ import { Route as TherapistProfileRouteImport } from './routes/therapist.profile
 import { Route as TherapistNotificationsRouteImport } from './routes/therapist.notifications'
 import { Route as TherapistMessagesRouteImport } from './routes/therapist.messages'
 import { Route as TherapistBookingsRouteImport } from './routes/therapist.bookings'
+import { Route as ProfileTopupRouteImport } from './routes/profile.topup'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTherapistsRouteImport } from './routes/admin.therapists'
+import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminApplicationsRouteImport } from './routes/admin.applications'
 import { Route as AdminSafespaceLoginHereRouteImport } from './routes/admin.safespace.loginHere'
@@ -106,6 +109,11 @@ const TherapistIndexRoute = TherapistIndexRouteImport.update({
   path: '/',
   getParentRoute: () => TherapistRoute,
 } as any)
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProfileRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -141,6 +149,11 @@ const TherapistBookingsRoute = TherapistBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => TherapistRoute,
 } as any)
+const ProfileTopupRoute = ProfileTopupRouteImport.update({
+  id: '/topup',
+  path: '/topup',
+  getParentRoute: () => ProfileRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -149,6 +162,11 @@ const AdminUsersRoute = AdminUsersRouteImport.update({
 const AdminTherapistsRoute = AdminTherapistsRouteImport.update({
   id: '/therapists',
   path: '/therapists',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinancialsRoute = AdminFinancialsRouteImport.update({
+  id: '/financials',
+  path: '/financials',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBookingsRoute = AdminBookingsRouteImport.update({
@@ -175,15 +193,17 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
   '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/therapist': typeof TherapistRouteWithChildren
   '/therapist-onboarding': typeof TherapistOnboardingRoute
   '/therapists': typeof TherapistsRouteWithChildren
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/financials': typeof AdminFinancialsRoute
   '/admin/therapists': typeof AdminTherapistsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/profile/topup': typeof ProfileTopupRoute
   '/therapist/bookings': typeof TherapistBookingsRoute
   '/therapist/messages': typeof TherapistMessagesRoute
   '/therapist/notifications': typeof TherapistNotificationsRoute
@@ -191,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/therapist/sessions': typeof TherapistSessionsRoute
   '/therapists/$id': typeof TherapistsIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/profile/': typeof ProfileIndexRoute
   '/therapist/': typeof TherapistIndexRoute
   '/therapists/': typeof TherapistsIndexRoute
   '/admin/safespace/loginHere': typeof AdminSafespaceLoginHereRoute
@@ -202,13 +223,14 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
   '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/therapist-onboarding': typeof TherapistOnboardingRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/financials': typeof AdminFinancialsRoute
   '/admin/therapists': typeof AdminTherapistsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/profile/topup': typeof ProfileTopupRoute
   '/therapist/bookings': typeof TherapistBookingsRoute
   '/therapist/messages': typeof TherapistMessagesRoute
   '/therapist/notifications': typeof TherapistNotificationsRoute
@@ -216,6 +238,7 @@ export interface FileRoutesByTo {
   '/therapist/sessions': typeof TherapistSessionsRoute
   '/therapists/$id': typeof TherapistsIdRoute
   '/admin': typeof AdminIndexRoute
+  '/profile': typeof ProfileIndexRoute
   '/therapist': typeof TherapistIndexRoute
   '/therapists': typeof TherapistsIndexRoute
   '/admin/safespace/loginHere': typeof AdminSafespaceLoginHereRoute
@@ -229,15 +252,17 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
   '/onboarding': typeof OnboardingRoute
-  '/profile': typeof ProfileRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/therapist': typeof TherapistRouteWithChildren
   '/therapist-onboarding': typeof TherapistOnboardingRoute
   '/therapists': typeof TherapistsRouteWithChildren
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/financials': typeof AdminFinancialsRoute
   '/admin/therapists': typeof AdminTherapistsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/profile/topup': typeof ProfileTopupRoute
   '/therapist/bookings': typeof TherapistBookingsRoute
   '/therapist/messages': typeof TherapistMessagesRoute
   '/therapist/notifications': typeof TherapistNotificationsRoute
@@ -245,6 +270,7 @@ export interface FileRoutesById {
   '/therapist/sessions': typeof TherapistSessionsRoute
   '/therapists/$id': typeof TherapistsIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/profile/': typeof ProfileIndexRoute
   '/therapist/': typeof TherapistIndexRoute
   '/therapists/': typeof TherapistsIndexRoute
   '/admin/safespace/loginHere': typeof AdminSafespaceLoginHereRoute
@@ -266,8 +292,10 @@ export interface FileRouteTypes {
     | '/therapists'
     | '/admin/applications'
     | '/admin/bookings'
+    | '/admin/financials'
     | '/admin/therapists'
     | '/admin/users'
+    | '/profile/topup'
     | '/therapist/bookings'
     | '/therapist/messages'
     | '/therapist/notifications'
@@ -275,6 +303,7 @@ export interface FileRouteTypes {
     | '/therapist/sessions'
     | '/therapists/$id'
     | '/admin/'
+    | '/profile/'
     | '/therapist/'
     | '/therapists/'
     | '/admin/safespace/loginHere'
@@ -286,13 +315,14 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/messages'
     | '/onboarding'
-    | '/profile'
     | '/reset-password'
     | '/therapist-onboarding'
     | '/admin/applications'
     | '/admin/bookings'
+    | '/admin/financials'
     | '/admin/therapists'
     | '/admin/users'
+    | '/profile/topup'
     | '/therapist/bookings'
     | '/therapist/messages'
     | '/therapist/notifications'
@@ -300,6 +330,7 @@ export interface FileRouteTypes {
     | '/therapist/sessions'
     | '/therapists/$id'
     | '/admin'
+    | '/profile'
     | '/therapist'
     | '/therapists'
     | '/admin/safespace/loginHere'
@@ -319,8 +350,10 @@ export interface FileRouteTypes {
     | '/therapists'
     | '/admin/applications'
     | '/admin/bookings'
+    | '/admin/financials'
     | '/admin/therapists'
     | '/admin/users'
+    | '/profile/topup'
     | '/therapist/bookings'
     | '/therapist/messages'
     | '/therapist/notifications'
@@ -328,6 +361,7 @@ export interface FileRouteTypes {
     | '/therapist/sessions'
     | '/therapists/$id'
     | '/admin/'
+    | '/profile/'
     | '/therapist/'
     | '/therapists/'
     | '/admin/safespace/loginHere'
@@ -341,7 +375,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   MessagesRoute: typeof MessagesRoute
   OnboardingRoute: typeof OnboardingRoute
-  ProfileRoute: typeof ProfileRoute
+  ProfileRoute: typeof ProfileRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   TherapistRoute: typeof TherapistRouteWithChildren
   TherapistOnboardingRoute: typeof TherapistOnboardingRoute
@@ -448,6 +482,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TherapistIndexRouteImport
       parentRoute: typeof TherapistRoute
     }
+    '/profile/': {
+      id: '/profile/'
+      path: '/'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof ProfileIndexRouteImport
+      parentRoute: typeof ProfileRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -497,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TherapistBookingsRouteImport
       parentRoute: typeof TherapistRoute
     }
+    '/profile/topup': {
+      id: '/profile/topup'
+      path: '/topup'
+      fullPath: '/profile/topup'
+      preLoaderRoute: typeof ProfileTopupRouteImport
+      parentRoute: typeof ProfileRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -509,6 +557,13 @@ declare module '@tanstack/react-router' {
       path: '/therapists'
       fullPath: '/admin/therapists'
       preLoaderRoute: typeof AdminTherapistsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/financials': {
+      id: '/admin/financials'
+      path: '/financials'
+      fullPath: '/admin/financials'
+      preLoaderRoute: typeof AdminFinancialsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/bookings': {
@@ -538,6 +593,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminApplicationsRoute: typeof AdminApplicationsRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminFinancialsRoute: typeof AdminFinancialsRoute
   AdminTherapistsRoute: typeof AdminTherapistsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -547,6 +603,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminApplicationsRoute: AdminApplicationsRoute,
   AdminBookingsRoute: AdminBookingsRoute,
+  AdminFinancialsRoute: AdminFinancialsRoute,
   AdminTherapistsRoute: AdminTherapistsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -554,6 +611,19 @@ const AdminRouteChildren: AdminRouteChildren = {
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface ProfileRouteChildren {
+  ProfileTopupRoute: typeof ProfileTopupRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfileTopupRoute: ProfileTopupRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
+}
+
+const ProfileRouteWithChildren =
+  ProfileRoute._addFileChildren(ProfileRouteChildren)
 
 interface TherapistRouteChildren {
   TherapistBookingsRoute: typeof TherapistBookingsRoute
@@ -599,7 +669,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   MessagesRoute: MessagesRoute,
   OnboardingRoute: OnboardingRoute,
-  ProfileRoute: ProfileRoute,
+  ProfileRoute: ProfileRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   TherapistRoute: TherapistRouteWithChildren,
   TherapistOnboardingRoute: TherapistOnboardingRoute,
