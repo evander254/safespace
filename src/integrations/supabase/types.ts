@@ -691,6 +691,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: any[]
       }
+      admin_action_therapist: {
+        Args: {
+          p_is_approved: boolean
+          p_therapist_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "client" | "therapist" | "admin"

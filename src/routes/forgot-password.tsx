@@ -57,7 +57,11 @@ function ForgotPasswordPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-sm space-y-8">
           <div className="space-y-2">
-            <Link to="/auth" className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors mb-4">
+            <Link 
+              to="/auth" 
+              search={{ mode: "signin" }}
+              className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors mb-4"
+            >
               <ArrowLeft className="h-4 w-4" />
               Back to Sign In
             </Link>
