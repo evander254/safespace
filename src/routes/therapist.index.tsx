@@ -166,22 +166,96 @@ function TherapistDashboard() {
   ];
 
   if (!isApproved) {
+    const steps = [
+      { id: "account", title: "Account Created", description: "Identity verified via email", completed: true },
+      { id: "profile", title: "Profile Submitted", description: "All clinical details provided", completed: true },
+      { id: "review", title: "Clinical Review", description: "Our team is verifying your license", completed: false, active: true },
+      { id: "activated", title: "Platform Access", description: "Open for bookings and sessions", completed: false },
+    ];
+
     return (
-      <div className="p-8 max-w-4xl mx-auto space-y-8">
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-3xl p-8 text-center space-y-4">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/20 text-amber-500">
-            <Clock className="h-8 w-8" />
+      <div className="p-8 max-w-5xl mx-auto space-y-12 py-16">
+        <div className="text-center space-y-4">
+          <div className="inline-flex h-20 w-20 items-center justify-center rounded-[2rem] bg-amber-500/10 text-amber-500 shadow-inner">
+            <Sparkles className="h-10 w-10 animate-pulse" />
           </div>
-          <h1 className="text-2xl font-semibold">Profile Under Review</h1>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Your therapist profile is currently being reviewed by our clinical team. 
-            Once approved, you'll be able to accept bookings and start sessions.
+          <h1 className="text-4xl font-bold tracking-tight">Your clinical journey is beginning.</h1>
+          <p className="text-muted-foreground max-w-lg mx-auto text-lg font-medium">
+            We're currently reviewing your application. This meticulous process ensures the highest standard of care for our clients.
           </p>
-          <div className="flex justify-center gap-4 pt-4">
-            <Button variant="outline" className="rounded-full" asChild>
-              <Link to="/therapist/profile">View My Profile</Link>
-            </Button>
-            <Button variant="outline" className="rounded-full">Help Center</Button>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-4 relative">
+          <div className="absolute top-10 left-0 right-0 h-0.5 bg-muted hidden md:block" />
+          {steps.map((s, i) => (
+            <div key={s.id} className="relative flex flex-col items-center text-center space-y-4 group">
+              <div className={`z-10 h-20 w-20 rounded-[1.5rem] flex items-center justify-center transition-all duration-500 border-4 ${
+                s.completed 
+                  ? "bg-primary text-primary-foreground border-primary/20 shadow-[var(--shadow-glow)]" 
+                  : s.active
+                    ? "bg-card border-amber-500/50 text-amber-500 shadow-xl"
+                    : "bg-muted/50 border-transparent text-muted-foreground"
+              }`}>
+                {s.completed ? <CheckCircle2 className="h-8 w-8" /> : <span className="text-xl font-bold">{i + 1}</span>}
+              </div>
+              <div className="space-y-1">
+                <h3 className={`font-bold text-sm ${s.active ? "text-amber-500" : "text-foreground"}`}>{s.title}</h3>
+                <p className="text-xs text-muted-foreground px-4 leading-relaxed">{s.description}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-card border border-border/50 rounded-[3rem] p-10 shadow-[var(--shadow-soft)] overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
+          <div className="relative z-10 grid md:grid-cols-2 gap-10 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+                <Clock className="h-3.5 w-3.5" /> Est. Time: 24-48 Hours
+              </div>
+              <h2 className="text-2xl font-bold">While you wait...</h2>
+              <ul className="space-y-4">
+                {[
+                  "Double check your profile bio for clarity",
+                  "Ensure your session rates are competitive",
+                  "Browse our clinical resource center",
+                  "Prepare your quiet space for video calls"
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-3 text-muted-foreground font-medium">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap gap-4 pt-4">
+                <Button className="rounded-2xl h-14 px-8 font-bold shadow-[var(--shadow-glow)]" asChild>
+                  <Link to="/therapist/profile">Edit Professional Profile</Link>
+                </Button>
+                <Button variant="outline" className="rounded-2xl h-14 px-8 font-bold">Visit Support Center</Button>
+              </div>
+            </div>
+            <div className="hidden md:block">
+              <div className="relative p-6 rounded-[2rem] bg-muted/30 border border-border/50 backdrop-blur-sm">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/20 text-primary grid place-items-center font-bold text-xl">
+                    {user?.user_metadata?.full_name?.[0] || "T"}
+                  </div>
+                  <div>
+                    <div className="font-bold">{user?.user_metadata?.full_name || "Therapist"}</div>
+                    <div className="text-xs text-muted-foreground">Clinical Applicant</div>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div className="h-full bg-primary w-[75%]" />
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <span>Profile Completeness</span>
+                    <span>75%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

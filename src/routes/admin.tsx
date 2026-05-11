@@ -31,6 +31,12 @@ function AdminLayout() {
   useEffect(() => {
     if (authLoading) return;
 
+    const isLoginPath = location.pathname === "/admin/safespace/loginHere";
+    if (isLoginPath) {
+      setAuthorized(true);
+      return;
+    }
+
     const superAdminSession = localStorage.getItem("safespace_admin_session");
     const isSuperAdmin = superAdminSession && JSON.parse(superAdminSession).expiry > Date.now();
 
@@ -39,7 +45,7 @@ function AdminLayout() {
     } else {
       setAuthorized(true);
     }
-  }, [roles, authLoading, navigate]);
+  }, [roles, authLoading, navigate, location.pathname]);
 
   if (authLoading || (!authorized)) {
     return (
@@ -63,6 +69,12 @@ function AdminLayout() {
     localStorage.removeItem("safespace_admin_session");
     navigate({ to: "/admin/safespace/loginHere" });
   };
+
+  const isLoginPath = location.pathname === "/admin/safespace/loginHere";
+
+  if (isLoginPath) {
+    return <Outlet />;
+  }
 
   return (
     <div className="flex min-h-screen bg-[#fcfcfd]">

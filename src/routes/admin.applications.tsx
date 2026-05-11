@@ -82,10 +82,10 @@ function AdminApplications() {
   };
 
   const approve = async (id: string) => {
-    const { error } = await supabase
-      .from("therapists")
-      .update({ is_approved: true })
-      .eq("id", id);
+    const { error } = await supabase.rpc("admin_action_therapist", {
+      p_therapist_id: id,
+      p_is_approved: true
+    });
     
     if (error) toast.error(error.message);
     else {
@@ -95,10 +95,10 @@ function AdminApplications() {
   };
 
   const reject = async (id: string) => {
-    const { error } = await supabase
-      .from("therapists")
-      .update({ onboarding_completed: false })
-      .eq("id", id);
+    const { error } = await supabase.rpc("admin_action_therapist", {
+      p_therapist_id: id,
+      p_is_approved: false
+    });
     
     if (error) toast.error(error.message);
     else {

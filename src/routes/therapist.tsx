@@ -43,8 +43,10 @@ function TherapistLayout() {
     } else if (!onboardingCompleted) {
       navigate({ to: "/therapist-onboarding" });
     } else if (!isApproved) {
-      const allowedPaths = ["/therapist", "/therapist/", "/therapist/profile"];
-      if (!allowedPaths.includes(window.location.pathname)) {
+      // Strictly enforce allowed paths for unapproved therapists
+      const allowedPaths = ["/therapist", "/therapist/", "/therapist/profile", "/therapist/profile/"];
+      const currentPath = window.location.pathname;
+      if (!allowedPaths.includes(currentPath)) {
         navigate({ to: "/therapist" });
       }
     }

@@ -6,8 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/auth")({
 
 const schema = z.object({
   email: z.string().trim().email().max(255),
-  password: z.string().min(6).max(72),
+  password: z.string().min(8, "Password must be at least 8 characters").max(72),
   fullName: z.string().trim().min(1).max(100).optional(),
 });
 
@@ -183,8 +185,25 @@ function AuthPage() {
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className="h-10 rounded-xl border-border/50 bg-muted/20 focus-visible:ring-primary/20 text-sm" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required className="h-10 rounded-xl border-border/50 bg-muted/20 focus-visible:ring-primary/20 text-sm" />
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Password</Label>
+                  {mode === "signin" && (
+                    <Link 
+                      to="/forgot-password"
+                      className="text-[11px] font-bold text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
+                <PasswordInput 
+                  id="password" 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)} 
+                  placeholder={mode === "signup" ? "At least 8 characters" : "Enter your password"} 
+                  required 
+                  showStrength={mode === "signup"}
+                />
               </div>
               <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold shadow-soft hover:shadow-diffused transition-all active:scale-[0.98] text-sm">
                 {loading ? "Processing…" : mode === "signup" ? "Create account" : "Sign in"}

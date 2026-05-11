@@ -12,9 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TherapistsRouteImport } from './routes/therapists'
 import { Route as TherapistOnboardingRouteImport } from './routes/therapist-onboarding'
 import { Route as TherapistRouteImport } from './routes/therapist'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MessagesRouteImport } from './routes/messages'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -49,6 +51,11 @@ const TherapistRoute = TherapistRouteImport.update({
   path: '/therapist',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -62,6 +69,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookingsRoute = BookingsRouteImport.update({
@@ -160,9 +172,11 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/therapist': typeof TherapistRouteWithChildren
   '/therapist-onboarding': typeof TherapistOnboardingRoute
   '/therapists': typeof TherapistsRouteWithChildren
@@ -185,9 +199,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/therapist-onboarding': typeof TherapistOnboardingRoute
   '/admin/applications': typeof AdminApplicationsRoute
   '/admin/bookings': typeof AdminBookingsRoute
@@ -210,9 +226,11 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/therapist': typeof TherapistRouteWithChildren
   '/therapist-onboarding': typeof TherapistOnboardingRoute
   '/therapists': typeof TherapistsRouteWithChildren
@@ -238,9 +256,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/bookings'
+    | '/forgot-password'
     | '/messages'
     | '/onboarding'
     | '/profile'
+    | '/reset-password'
     | '/therapist'
     | '/therapist-onboarding'
     | '/therapists'
@@ -263,9 +283,11 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/bookings'
+    | '/forgot-password'
     | '/messages'
     | '/onboarding'
     | '/profile'
+    | '/reset-password'
     | '/therapist-onboarding'
     | '/admin/applications'
     | '/admin/bookings'
@@ -287,9 +309,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/auth'
     | '/bookings'
+    | '/forgot-password'
     | '/messages'
     | '/onboarding'
     | '/profile'
+    | '/reset-password'
     | '/therapist'
     | '/therapist-onboarding'
     | '/therapists'
@@ -314,9 +338,11 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   BookingsRoute: typeof BookingsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   MessagesRoute: typeof MessagesRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TherapistRoute: typeof TherapistRouteWithChildren
   TherapistOnboardingRoute: typeof TherapistOnboardingRoute
   TherapistsRoute: typeof TherapistsRouteWithChildren
@@ -345,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TherapistRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -364,6 +397,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof MessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bookings': {
@@ -556,9 +596,11 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   BookingsRoute: BookingsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   MessagesRoute: MessagesRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TherapistRoute: TherapistRouteWithChildren,
   TherapistOnboardingRoute: TherapistOnboardingRoute,
   TherapistsRoute: TherapistsRouteWithChildren,

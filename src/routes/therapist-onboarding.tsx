@@ -54,7 +54,7 @@ const LANGUAGES = ["English", "Swahili", "French", "Spanish", "Arabic"];
 const INSURANCE_PLANS = ["NHIF", "AAR", "Jubilee", "Britam", "Old Mutual"];
 
 function TherapistOnboarding() {
-  const { user, roles, onboardingCompleted, isApproved, refreshTherapistStatus } = useAuth();
+  const { user, roles, onboardingCompleted, isApproved, isEmailConfirmed, refreshTherapistStatus } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -118,27 +118,86 @@ function TherapistOnboarding() {
   const finish = async () => {
     setLoading(true);
     try {
-      if (!user?.id) return;
+      if (!user?.id) {
+        toast.error("User session not found. Please log in again.");
+        return;
+      }
+
+      const payload = {
+        id: user.id,
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || "Therapist",
+        ...formData,
+        onboarding_completed: true,
+        onboarding_step: 5,
+        updated_at: new Date().toISOString(),
+      };
+
+      console.log("Submitting therapist onboarding payload:", payload);
+
       const { data, error } = await supabase
         .from("therapists")
-        .update({
-          ...formData,
-          onboarding_completed: true,
-          onboarding_step: 5,
-        })
-        .eq("id", user.id);
+        .upsert(payload, { onConflict: 'id' })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase Onboarding Error:", error);
+        throw error;
+      }
+
+      console.log("Onboarding successful, returned data:", data);
       
       await refreshTherapistStatus();
       toast.success("Onboarding complete! Your profile is now being reviewed by our clinical team.");
       navigate({ to: "/therapist" });
     } catch (err) {
-      toast.error((err as Error).message);
+      const message = (err as any).message || "An unexpected error occurred during onboarding.";
+      console.error("Onboarding Catch Block:", err);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (!isEmailConfirmed) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <div className="w-full max-w-md text-center space-y-8">
+          <div className="relative mx-auto h-24 w-24">
+            <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+            <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Globe className="h-12 w-12" />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h1 className="text-3xl font-bold tracking-tight">Check your inbox</h1>
+            <p className="text-muted-foreground">
+              We've sent a verification link to <span className="font-semibold text-foreground">{user?.email}</span>. 
+              Please verify your email to start your professional onboarding.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Button 
+              className="rounded-full py-6 font-bold shadow-[var(--shadow-glow)]"
+              onClick={() => window.location.reload()}
+            >
+              I've verified my email
+            </Button>
+            <Button 
+              variant="ghost" 
+              className="rounded-full"
+              onClick={async () => {
+                const { error } = await supabase.auth.resend({ type: 'signup', email: user?.email! });
+                if (error) toast.error(error.message);
+                else toast.success("Verification email resent!");
+              }}
+            >
+              Resend email
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (onboardingCompleted && !isApproved) {
     return (

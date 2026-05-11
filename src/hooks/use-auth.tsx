@@ -12,6 +12,7 @@ interface AuthCtx {
   intakeCompleted: boolean;
   isApproved: boolean;
   onboardingCompleted: boolean;
+  isEmailConfirmed: boolean;
   signOut: () => Promise<void>;
   refreshRoles: () => Promise<void>;
   refreshTherapistStatus: () => Promise<void>;
@@ -83,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         intakeCompleted: !!user?.user_metadata?.intake_completed,
         isApproved: therapistStatus.is_approved,
         onboardingCompleted: therapistStatus.onboarding_completed,
+        isEmailConfirmed: !!user?.email_confirmed_at,
         signOut: async () => {
           await supabase.auth.signOut();
         },
