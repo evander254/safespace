@@ -35,9 +35,7 @@ export function SiteHeader() {
                 <Link to="/messages" className="relative group/nav grid h-8 w-8 place-items-center rounded-full text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-900" activeProps={{ className: "text-slate-900 bg-slate-50" }}>
                   <MessageSquare className="h-4 w-4 transition-transform group-hover/nav:scale-110" />
                 </Link>
-                <Link to="/notifications" className="relative group/nav grid h-8 w-8 place-items-center rounded-full text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-900" activeProps={{ className: "text-slate-900 bg-slate-50" }}>
-                  <Bell className="h-4 w-4 transition-transform group-hover/nav:scale-110" />
-                </Link>
+
                 <Link to="/profile" className="group/nav grid h-8 w-8 place-items-center rounded-full text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-900" activeProps={{ className: "text-slate-900 bg-slate-50" }}>
                   <User className="h-4 w-4 transition-transform group-hover/nav:scale-110" />
                 </Link>
