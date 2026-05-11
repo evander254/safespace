@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ChatView } from "@/components/chat-view";
@@ -86,32 +87,32 @@ function MessagesPage() {
   const unreadChats = chats?.reduce((acc, c) => acc + c.unreadCount, 0) || 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background/50 selection:bg-primary/10">
       <SiteHeader />
       
-      <main className="mx-auto max-w-4xl px-4 py-8 md:py-12">
-        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+      <main className="mx-auto max-w-7xl px-4 py-8 md:py-12 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">Inbox</h1>
-            <p className="mt-2 text-muted-foreground">Manage your conversations and updates.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">Inbox</h1>
+            <p className="mt-2 text-base text-slate-500 font-medium">Your sanctuary for conversation and updates.</p>
           </div>
           
           <Tabs value={tab} onValueChange={setTab} className="w-full md:w-auto">
-            <TabsList className="grid w-full grid-cols-2 rounded-full p-1 md:w-[300px]">
-              <TabsTrigger value="chats" className="rounded-full gap-2">
+            <TabsList className="grid h-11 w-full grid-cols-2 rounded-xl p-1 md:w-[280px] bg-white border border-slate-100 shadow-subtle">
+              <TabsTrigger value="chats" className="rounded-lg gap-2 font-bold text-xs data-[state=active]:shadow-subtle data-[state=active]:bg-slate-50 transition-all text-slate-500 data-[state=active]:text-slate-900">
                 <MessageSquare className="h-4 w-4" />
                 Chats
                 {unreadChats > 0 && (
-                  <Badge variant="destructive" className="h-5 w-5 justify-center rounded-full p-0 text-[10px]">
+                  <Badge className="h-4.5 min-w-[18px] justify-center rounded-full bg-primary p-0 text-[9px] font-bold">
                     {unreadChats}
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="rounded-full gap-2">
+              <TabsTrigger value="notifications" className="rounded-lg gap-2 font-bold text-xs data-[state=active]:shadow-subtle data-[state=active]:bg-slate-50 transition-all text-slate-500 data-[state=active]:text-slate-900">
                 <Bell className="h-4 w-4" />
                 Activity
                 {unreadNotifications > 0 && (
-                  <Badge variant="destructive" className="h-5 w-5 justify-center rounded-full p-0 text-[10px]">
+                  <Badge className="h-4.5 min-w-[18px] justify-center rounded-full bg-primary p-0 text-[9px] font-bold">
                     {unreadNotifications}
                   </Badge>
                 )}
@@ -120,7 +121,7 @@ function MessagesPage() {
           </Tabs>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card shadow-[var(--shadow-soft)] overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card shadow-soft overflow-hidden">
           <Tabs value={tab} onValueChange={setTab}>
             <TabsContent value="chats" className="m-0 border-none outline-none">
               <div className="flex h-[500px] overflow-hidden">
@@ -133,20 +134,20 @@ function MessagesPage() {
                     <div className="p-4 space-y-4">
                       {Array.from({length: 3}).map((_, i) => (
                         <div key={i} className="flex gap-4 animate-pulse">
-                          <div className="h-12 w-12 rounded-2xl bg-muted" />
+                          <div className="h-12 w-12 rounded-2xl bg-slate-50" />
                           <div className="flex-1 space-y-2">
-                            <div className="h-4 w-32 bg-muted rounded" />
-                            <div className="h-3 w-full bg-muted rounded" />
+                            <div className="h-4 w-32 bg-slate-50 rounded" />
+                            <div className="h-3 w-full bg-slate-50 rounded" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : !chats?.length ? (
                     <div className="flex flex-col items-center justify-center p-12 text-center">
-                      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-primary-soft text-primary">
+                      <div className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-slate-50 text-slate-400">
                         <MessageSquare className="h-6 w-6" />
                       </div>
-                      <p className="text-sm font-medium text-muted-foreground">No conversations yet</p>
+                      <p className="text-[13px] font-semibold text-slate-500">No conversations yet</p>
                     </div>
                   ) : (
                     <div className="divide-y divide-border overflow-y-auto">
@@ -155,7 +156,7 @@ function MessagesPage() {
                           key={chat.id}
                           onClick={() => setSelectedChat(chat)}
                           className={`
-                            flex w-full items-center gap-3 p-4 text-left transition-all
+                            flex w-full items-center gap-3 p-3 text-left transition-all
                             ${selectedChat?.id === chat.id ? 'bg-primary/5' : 'hover:bg-muted/30'}
                           `}
                         >
@@ -244,15 +245,16 @@ function MessagesPage() {
               ) : (
                 <div className="divide-y divide-border">
                   {notifications.map((n) => (
-                    <div key={n.id} className={`p-5 transition hover:bg-muted/30 ${!n.is_read ? 'bg-primary-soft/5' : ''}`}>
+                    <div key={n.id} className={`p-5 transition hover:bg-slate-50/50 ${!n.is_read ? 'bg-primary/5' : ''}`}>
                       <div className="flex gap-4">
-                        <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${!n.is_read ? 'bg-primary' : 'bg-transparent'}`} />
+                        <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${!n.is_read ? 'bg-primary' : 'bg-slate-200'}`} />
                         <div className="flex-1">
-                          <h4 className="font-medium text-sm">{n.title}</h4>
-                          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{n.content}</p>
-                          <div className="mt-3 flex items-center justify-between">
-                            <span className="text-[11px] text-muted-foreground">
-                              {new Date(n.created_at).toLocaleDateString()} at {new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          <h4 className="font-bold text-[14px] text-slate-900">{n.title}</h4>
+                          <p className="mt-1 text-[13px] text-slate-600 leading-relaxed">{n.content}</p>
+                          <div className="mt-4 flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+                              <Clock className="h-3 w-3" />
+                              {new Date(n.created_at).toLocaleDateString()} · {new Date(n.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                             </span>
                             {n.link && (
                                <button 
@@ -273,6 +275,7 @@ function MessagesPage() {
           </Tabs>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }

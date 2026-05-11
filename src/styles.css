@@ -60,42 +60,43 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
 }
 
 :root {
   --radius: 1rem;
-  --background: oklch(0.985 0.012 95);
-  --foreground: oklch(0.28 0.04 200);
+  --background: oklch(0.99 0.005 247.896); /* bg-slate-50/50 */
+  --foreground: oklch(0.279 0.041 260.031); /* text-slate-800 */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.28 0.04 200);
+  --card-foreground: oklch(0.279 0.041 260.031);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.28 0.04 200);
-  --primary: oklch(0.55 0.07 175);
-  --primary-foreground: oklch(0.99 0.005 95);
-  --primary-soft: oklch(0.92 0.04 175);
-  --secondary: oklch(0.7 0.08 230);
-  --secondary-foreground: oklch(0.99 0.005 95);
-  --muted: oklch(0.95 0.012 180);
-  --muted-foreground: oklch(0.48 0.03 200);
-  --accent: oklch(0.88 0.06 160);
-  --accent-foreground: oklch(0.28 0.04 200);
+  --popover-foreground: oklch(0.279 0.041 260.031);
+  --primary: oklch(0.55 0.08 172);
+  --primary-foreground: oklch(0.99 0.005 85);
+  --primary-soft: oklch(0.92 0.05 172);
+  --secondary: oklch(0.92 0.02 172);
+  --secondary-foreground: oklch(0.4 0.08 172);
+  --muted: oklch(0.96 0.01 172);
+  --muted-foreground: oklch(0.5 0.03 172);
+  --accent: oklch(0.92 0.05 172);
+  --accent-foreground: oklch(0.25 0.04 172);
   --destructive: oklch(0.6 0.18 25);
-  --destructive-foreground: oklch(0.99 0.005 95);
-  --border: oklch(0.9 0.015 180);
-  --input: oklch(0.92 0.012 180);
-  --ring: oklch(0.55 0.07 175);
-  --gradient-hero: linear-gradient(135deg, oklch(0.92 0.04 175) 0%, oklch(0.94 0.04 230) 50%, oklch(0.96 0.05 95) 100%);
-  --gradient-primary: linear-gradient(135deg, oklch(0.55 0.07 175), oklch(0.65 0.08 200));
-  --shadow-soft: 0 8px 30px -12px oklch(0.4 0.05 200 / 0.18);
-  --shadow-glow: 0 20px 60px -20px oklch(0.55 0.07 175 / 0.4);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --destructive-foreground: oklch(0.99 0.005 85);
+  --border: oklch(0.96 0.01 172); /* border-slate-100 equivalent */
+  --input: oklch(0.96 0.01 172);
+  --ring: oklch(0.55 0.08 172);
+  --gradient-hero: linear-gradient(135deg, oklch(0.94 0.04 172) 0%, oklch(0.96 0.03 85) 100%);
+  --gradient-primary: linear-gradient(135deg, oklch(0.55 0.08 172), oklch(0.65 0.09 190));
+  --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
+  --sidebar-foreground: oklch(0.279 0.041 260.031);
   --sidebar-primary: oklch(0.208 0.042 265.755);
   --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
   --sidebar-accent: oklch(0.968 0.007 247.896);
@@ -147,6 +148,26 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.875rem; /* text-sm default */
+    line-height: 1.625; /* leading-relaxed */
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: oklch(0.129 0.042 264.695); /* text-slate-900 equivalent */
+    letter-spacing: -0.025em; /* tracking-tight */
+  }
+
+  button, input, select, textarea {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .shadow-diffused {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-subtle);
   }
 }
 
@@ -317,7 +338,7 @@
 /* ─── Profile Page ─── */
 .profile-card {
   padding: 24px;
-  border-radius: var(--radius-2xl);
+  border-radius: 1.5rem;
   border: 1px solid var(--border);
   background: var(--card);
   box-shadow: var(--shadow-soft);
@@ -325,6 +346,7 @@
 }
 
 .profile-card:hover {
-  box-shadow: 0 12px 40px -15px oklch(0.4 0.05 200 / 0.12);
+  box-shadow: var(--shadow-diffused);
+  border-color: var(--primary);
   transform: translateY(-2px);
 }

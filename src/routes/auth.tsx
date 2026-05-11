@@ -130,63 +130,64 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-background">
       <div className="grid min-h-screen md:grid-cols-2">
-        <div className="hidden md:flex flex-col justify-between p-10" style={{ backgroundImage: "var(--gradient-hero)" }}>
-          <div className="flex items-center gap-2 font-semibold">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground">
-              <Heart className="h-4 w-4" />
-            </span>
-            safe space
+        <div className="hidden md:flex flex-col justify-between p-12 relative overflow-hidden" style={{ backgroundImage: "var(--gradient-hero)" }}>
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,var(--primary)_0%,transparent_70%)]" />
+          <div className="flex items-center gap-2.5 font-bold text-primary relative z-10">
+            <div className="h-9 w-9 bg-primary rounded-[60%_40%_30%_70%] flex items-center justify-center text-primary-foreground shadow-diffused">
+              <Heart className="h-4.5 w-4.5 fill-current" />
+            </div>
+            <span className="text-lg tracking-tight">Safe Space</span>
           </div>
-          <div>
-            <h2 className="text-4xl font-semibold leading-tight">"The wound is the place where the light enters you."</h2>
-            <p className="mt-3 text-muted-foreground">— Rumi</p>
+          <div className="relative z-10 max-w-md">
+            <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-primary">"The wound is the place where the light enters you."</h2>
+            <p className="mt-5 text-lg text-muted-foreground font-medium italic">— Rumi</p>
           </div>
-          <div className="text-xs text-muted-foreground">Confidential. Encrypted. Always yours.</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest text-primary/40 relative z-10">Confidential · Encrypted · Private</div>
         </div>
 
         <div className="flex items-center justify-center p-6">
           <div className="w-full max-w-sm">
-            <h1 className="text-2xl font-semibold tracking-tight">{mode === "signup" ? "Create your account" : "Welcome back"}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {mode === "signup" ? "Start your journey with us." : "Sign in to continue."}
+            <h1 className="text-3xl font-bold tracking-tight text-primary">{mode === "signup" ? "Get started" : "Welcome back"}</h1>
+            <p className="mt-2 text-sm text-muted-foreground font-medium">
+              {mode === "signup" ? "Begin your journey to a calmer mind." : "Sign in to continue your care."}
             </p>
 
-            <form onSubmit={submit} className="mt-8 space-y-4">
+            <form onSubmit={submit} className="mt-6 space-y-4">
               {mode === "signup" && (
                 <>
                   <div className="space-y-1.5">
-                    <Label htmlFor="name">Full name</Label>
-                    <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" required />
+                    <Label htmlFor="name" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Full name</Label>
+                    <Input id="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" required className="h-10 rounded-xl border-border/50 bg-muted/20 focus-visible:ring-primary/20 text-sm" />
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg">
+                  <div className="grid grid-cols-2 gap-1 p-1 bg-muted/50 border border-border/30 rounded-xl">
                     <button
                       type="button"
                       onClick={() => setRole("client")}
-                      className={`py-1.5 text-xs font-medium rounded-md transition-all ${role === "client" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      className={`py-1.5 text-[11px] font-bold rounded-lg transition-all ${role === "client" ? "bg-card text-primary shadow-sm border border-border/20" : "text-muted-foreground hover:text-foreground"}`}
                     >
                       I need help
                     </button>
                     <button
                       type="button"
                       onClick={() => setRole("therapist")}
-                      className={`py-1.5 text-xs font-medium rounded-md transition-all ${role === "therapist" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                      className={`py-1.5 text-[11px] font-bold rounded-lg transition-all ${role === "therapist" ? "bg-card text-primary shadow-sm border border-border/20" : "text-muted-foreground hover:text-foreground"}`}
                     >
                       I'm a therapist
                     </button>
                   </div>
                 </>
               )}
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Email</Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className="h-10 rounded-xl border-border/50 bg-muted/20 focus-visible:ring-primary/20 text-sm" />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required />
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Password</Label>
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" required className="h-10 rounded-xl border-border/50 bg-muted/20 focus-visible:ring-primary/20 text-sm" />
               </div>
-              <Button type="submit" disabled={loading} className="w-full rounded-full">
-                {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+              <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl bg-primary text-primary-foreground font-bold shadow-soft hover:shadow-diffused transition-all active:scale-[0.98] text-sm">
+                {loading ? "Processing…" : mode === "signup" ? "Create account" : "Sign in"}
               </Button>
             </form>
 

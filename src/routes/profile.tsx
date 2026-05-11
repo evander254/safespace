@@ -27,10 +27,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ProfileImageUpload } from "@/components/profile-image-upload";
+import { useState } from "react";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -139,6 +152,35 @@ function ProfilePage() {
 
   const isLoading = profileLoading || intakeLoading;
 
+  const updateProfileMutation = useMutation({
+    mutationFn: async (values: { full_name: string; phone: string; avatar_url?: string }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update(values)
+        .eq("id", user!.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      toast.success("Profile updated successfully!");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editData, setEditData] = useState({ full_name: "", phone: "" });
+
+  useEffect(() => {
+    if (profile) {
+      setEditData({
+        full_name: profile.full_name || "",
+        phone: profile.phone || ""
+      });
+    }
+  }, [profile]);
+
   if (authLoading || isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -150,49 +192,102 @@ function ProfilePage() {
   if (!user || (roles.includes("client") && !intakeCompleted)) return null;
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background/50 selection:bg-primary/10 pb-20">
       <SiteHeader />
       
-      <main className="mx-auto max-w-4xl px-4 py-8 md:py-12">
+      <main className="mx-auto max-w-7xl px-4 py-8 md:py-10 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
+        <div className="mb-12 flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
           <div className="flex items-center gap-6">
             <div className="relative">
-              <div className="h-24 w-24 overflow-hidden rounded-3xl bg-muted shadow-[var(--shadow-soft)] md:h-28 md:w-28">
+              <div className="h-28 w-28 overflow-hidden rounded-2xl bg-slate-50 shadow-card md:h-32 md:w-32 border-4 border-white">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt={profile.full_name || ""} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-[image:var(--gradient-hero)] text-primary">
-                    <User className="h-10 w-10" />
+                  <div className="flex h-full w-full items-center justify-center bg-primary/5 text-primary">
+                    <User className="h-12 w-12" />
                   </div>
                 )}
               </div>
-              <div className="absolute -bottom-2 -right-2 flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
+              <div className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-subtle border-2 border-white">
                 <Shield className="h-4 w-4" />
               </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 md:text-4xl">
                 {profile?.full_name || user?.email?.split("@")[0]}
               </h1>
-              <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Mail className="h-4 w-4" /> {user?.email}
+              <div className="flex flex-wrap gap-4 text-[13px] text-slate-500 font-medium">
+                <span className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-slate-400" /> {user?.email}
                 </span>
                 {profile?.phone && (
-                  <span className="flex items-center gap-1.5">
-                    <Phone className="h-4 w-4" /> {profile.phone}
+                  <span className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-slate-400" /> {profile.phone}
                   </span>
                 )}
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" /> Joined {new Date(profile?.created_at || "").toLocaleDateString()}
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-slate-400" /> Joined {new Date(profile?.created_at || "").toLocaleDateString()}
                 </span>
               </div>
             </div>
           </div>
-          <Button asChild variant="outline" className="rounded-full shadow-sm">
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="rounded-xl h-10 px-6 text-sm font-semibold shadow-subtle hover:shadow-card border-slate-200 transition-all">
+                <Settings className="mr-2 h-4 w-4" /> Edit Profile
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] rounded-3xl">
+              <DialogHeader>
+                <DialogTitle>Edit Profile</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                <div className="flex justify-center">
+                  <ProfileImageUpload 
+                    userId={user.id} 
+                    currentUrl={profile?.avatar_url} 
+                    onUploadComplete={(url) => updateProfileMutation.mutate({ ...editData, avatar_url: url })}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input 
+                      id="name" 
+                      value={editData.full_name} 
+                      onChange={(e) => setEditData({ ...editData, full_name: e.target.value })} 
+                      className="rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input 
+                      id="phone" 
+                      value={editData.phone} 
+                      onChange={(e) => setEditData({ ...editData, phone: e.target.value })} 
+                      className="rounded-xl"
+                    />
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  onClick={() => {
+                    updateProfileMutation.mutate(editData);
+                    setEditOpen(false);
+                  }}
+                  className="rounded-full px-8"
+                  disabled={updateProfileMutation.isPending}
+                >
+                  {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Button asChild variant="ghost" className="rounded-xl h-10 px-4 text-sm font-medium text-slate-500">
             <Link to="/onboarding">
-              <Settings className="mr-2 h-4 w-4" /> Edit Preferences
+              Settings
             </Link>
           </Button>
         </div>
@@ -200,33 +295,33 @@ function ProfilePage() {
         <div className="grid gap-8 md:grid-cols-2">
           {/* Left Column: Intake Info */}
           <div className="space-y-8">
-            <section className="profile-card">
-              <div className="mb-4 flex items-center gap-2">
+            <section className="profile-card p-5 rounded-2xl border border-slate-100 bg-white shadow-card">
+              <div className="mb-6 flex items-center gap-2.5">
                 <Brain className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Primary Concerns</h2>
+                <h2 className="text-lg font-bold text-slate-900">Primary Concerns</h2>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {intake?.primary_concerns?.map((c) => (
-                  <Badge key={c} variant="secondary" className="rounded-full px-3 py-1 font-medium">
+                  <Badge key={c} variant="secondary" className="rounded-lg bg-slate-50 text-slate-600 border border-slate-100 px-3.5 py-1 text-[13px] font-semibold">
                     {c}
                   </Badge>
                 ))}
-                {!intake?.primary_concerns?.length && <p className="text-sm text-muted-foreground italic">No concerns listed</p>}
+                {!intake?.primary_concerns?.length && <p className="text-sm text-slate-500 italic">No concerns listed</p>}
               </div>
             </section>
 
-            <section className="profile-card">
-              <div className="mb-4 flex items-center gap-2">
+            <section className="profile-card p-5 rounded-2xl border border-slate-100 bg-white shadow-card">
+              <div className="mb-6 flex items-center gap-2.5">
                 <Sparkles className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Goals & Impact</h2>
+                <h2 className="text-lg font-bold text-slate-900">Goals & Impact</h2>
               </div>
-              <div className="space-y-4 text-sm">
+              <div className="space-y-4">
                 <div>
-                  <p className="mb-2 font-medium text-foreground/80">Aims for therapy:</p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="mb-3 text-[13px] font-bold text-slate-400 uppercase tracking-wider">Aims for therapy</p>
+                  <div className="flex flex-wrap gap-2.5">
                     {intake?.therapy_goals?.map((g) => (
-                      <div key={g} className="flex items-center gap-2 rounded-lg bg-primary/5 px-3 py-1.5 text-xs text-primary">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      <div key={g} className="flex items-center gap-2.5 rounded-xl bg-primary/5 px-4 py-2 text-[13px] font-semibold text-primary border border-primary/10">
+                        <CheckCircle2 className="h-4 w-4" />
                         {g}
                       </div>
                     ))}
@@ -235,19 +330,19 @@ function ProfilePage() {
               </div>
             </section>
 
-            <section className="profile-card">
-              <div className="mb-4 flex items-center gap-2">
+            <section className="profile-card p-5 rounded-2xl border border-slate-100 bg-white shadow-card">
+              <div className="mb-6 flex items-center gap-2.5">
                 <Heart className="h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Identity & Culture</h2>
+                <h2 className="text-lg font-bold text-slate-900">Identity & Culture</h2>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="rounded-xl border border-border/50 p-3">
-                  <p className="text-xs text-muted-foreground">Gender</p>
-                  <p className="font-medium">{intake?.gender || "Not specified"}</p>
+                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Gender</p>
+                  <p className="font-bold text-slate-900">{intake?.gender || "Not specified"}</p>
                 </div>
-                <div className="rounded-xl border border-border/50 p-3">
-                  <p className="text-xs text-muted-foreground">Ethnicity</p>
-                  <p className="font-medium">{intake?.ethnicity || "Not specified"}</p>
+                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Ethnicity</p>
+                  <p className="font-bold text-slate-900">{intake?.ethnicity || "Not specified"}</p>
                 </div>
               </div>
             </section>
@@ -265,19 +360,19 @@ function ProfilePage() {
                 <Badge variant="outline" className="rounded-full bg-primary/5 text-primary border-primary/20">Secure</Badge>
               </div>
               
-              <div className="space-y-6">
-                <div className="flex items-baseline justify-between rounded-3xl bg-card border border-border/50 p-6 shadow-sm">
+              <div className="space-y-5">
+                <div className="flex items-baseline justify-between rounded-2xl bg-card border border-border/50 p-5 shadow-sm">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1">Available Balance</p>
-                    <div className="text-3xl font-bold">KSh {Number(wallet?.balance || 0).toLocaleString()}</div>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Available Balance</p>
+                    <div className="text-2xl font-bold">KSh {Number(wallet?.balance || 0).toLocaleString()}</div>
                   </div>
                   <Button 
                     size="sm" 
-                    className="rounded-full h-10 px-4 font-bold"
+                    className="rounded-full h-9 px-4 text-xs font-bold"
                     onClick={() => depositMutation.mutate(1000)}
                     disabled={depositMutation.isPending}
                   >
-                    <Plus className="h-4 w-4 mr-1.5" /> Top up
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Top up
                   </Button>
                 </div>
 
@@ -367,14 +462,15 @@ function ProfilePage() {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 flex items-center gap-3 rounded-2xl bg-primary/5 p-4 text-xs text-muted-foreground">
-          <AlertCircle className="h-4 w-4 shrink-0 text-primary" />
-          <p>
-            Your profile details are confidential and used exclusively to match you with the most suitable therapists. 
-            You can update these preferences at any time.
+        <div className="mt-10 flex items-center gap-4 rounded-2xl bg-primary/5 p-5 text-xs text-muted-foreground border border-primary/10">
+          <AlertCircle className="h-5 w-5 shrink-0 text-primary" />
+          <p className="font-medium leading-relaxed">
+            Your profile details are confidential and used exclusively to match you with suitable therapists. 
+            Update your preferences at any time to improve your experience.
           </p>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
