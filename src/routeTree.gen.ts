@@ -32,6 +32,7 @@ import { Route as TherapistNotificationsRouteImport } from './routes/therapist.n
 import { Route as TherapistMessagesRouteImport } from './routes/therapist.messages'
 import { Route as TherapistBookingsRouteImport } from './routes/therapist.bookings'
 import { Route as ProfileTopupRouteImport } from './routes/profile.topup'
+import { Route as AdminWalletsRouteImport } from './routes/admin.wallets'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminTherapistsRouteImport } from './routes/admin.therapists'
 import { Route as AdminFinancialsRouteImport } from './routes/admin.financials'
@@ -154,6 +155,11 @@ const ProfileTopupRoute = ProfileTopupRouteImport.update({
   path: '/topup',
   getParentRoute: () => ProfileRoute,
 } as any)
+const AdminWalletsRoute = AdminWalletsRouteImport.update({
+  id: '/wallets',
+  path: '/wallets',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/therapists': typeof AdminTherapistsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/profile/topup': typeof ProfileTopupRoute
   '/therapist/bookings': typeof TherapistBookingsRoute
   '/therapist/messages': typeof TherapistMessagesRoute
@@ -230,6 +237,7 @@ export interface FileRoutesByTo {
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/therapists': typeof AdminTherapistsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/profile/topup': typeof ProfileTopupRoute
   '/therapist/bookings': typeof TherapistBookingsRoute
   '/therapist/messages': typeof TherapistMessagesRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/admin/financials': typeof AdminFinancialsRoute
   '/admin/therapists': typeof AdminTherapistsRoute
   '/admin/users': typeof AdminUsersRoute
+  '/admin/wallets': typeof AdminWalletsRoute
   '/profile/topup': typeof ProfileTopupRoute
   '/therapist/bookings': typeof TherapistBookingsRoute
   '/therapist/messages': typeof TherapistMessagesRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/admin/financials'
     | '/admin/therapists'
     | '/admin/users'
+    | '/admin/wallets'
     | '/profile/topup'
     | '/therapist/bookings'
     | '/therapist/messages'
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/admin/financials'
     | '/admin/therapists'
     | '/admin/users'
+    | '/admin/wallets'
     | '/profile/topup'
     | '/therapist/bookings'
     | '/therapist/messages'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/admin/financials'
     | '/admin/therapists'
     | '/admin/users'
+    | '/admin/wallets'
     | '/profile/topup'
     | '/therapist/bookings'
     | '/therapist/messages'
@@ -545,6 +557,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileTopupRouteImport
       parentRoute: typeof ProfileRoute
     }
+    '/admin/wallets': {
+      id: '/admin/wallets'
+      path: '/wallets'
+      fullPath: '/admin/wallets'
+      preLoaderRoute: typeof AdminWalletsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -596,6 +615,7 @@ interface AdminRouteChildren {
   AdminFinancialsRoute: typeof AdminFinancialsRoute
   AdminTherapistsRoute: typeof AdminTherapistsRoute
   AdminUsersRoute: typeof AdminUsersRoute
+  AdminWalletsRoute: typeof AdminWalletsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminSafespaceLoginHereRoute: typeof AdminSafespaceLoginHereRoute
 }
@@ -606,6 +626,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminFinancialsRoute: AdminFinancialsRoute,
   AdminTherapistsRoute: AdminTherapistsRoute,
   AdminUsersRoute: AdminUsersRoute,
+  AdminWalletsRoute: AdminWalletsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminSafespaceLoginHereRoute: AdminSafespaceLoginHereRoute,
 }

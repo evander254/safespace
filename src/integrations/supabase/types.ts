@@ -627,6 +627,91 @@ export type Database = {
           },
         ]
       }
+      topup_requests: {
+        Row: {
+          id: string
+          user_id: string
+          amount: number
+          method: string
+          reference_code: string | null
+          status: "pending" | "approved" | "rejected"
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount: number
+          method: string
+          reference_code?: string | null
+          status?: "pending" | "approved" | "rejected"
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount?: number
+          method?: string
+          reference_code?: string | null
+          status?: "pending" | "approved" | "rejected"
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topup_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      payment_methods: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          nickname: string | null
+          details: Json
+          is_default: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          nickname?: string | null
+          details?: Json
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          nickname?: string | null
+          details?: Json
+          is_default?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -697,6 +782,26 @@ export type Database = {
           p_therapist_id: string
         }
         Returns: boolean
+      }
+      get_all_topup_requests_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: any[]
+      }
+      update_topup_status_admin: {
+        Args: {
+          p_request_id: string
+          p_status: "pending" | "approved" | "rejected"
+          p_admin_notes?: string
+        }
+        Returns: void
+      }
+      get_all_wallets_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: any[]
+      }
+      make_me_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: void
       }
     }
     Enums: {

@@ -41,6 +41,7 @@ export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Dashboard · Safe Space Admin" }] }),
 });
 
+
 function AdminDashboard() {
   const { user, roles, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -58,8 +59,17 @@ function AdminDashboard() {
       confirmed: 0
     },
     newUsersWeek: 0,
-    newTherapistsWeek: 0
+    newTherapistsWeek: 0,
+    topupStats: {
+      pending_count: 0,
+      pending_amount: 0,
+      approved_today_count: 0,
+      total_approved_amount: 0
+    }
   });
+  const [pendingTopups, setPendingTopups] = useState<any[]>([]);
+  const [topupHistory, setTopupHistory] = useState<any[]>([]);
+
   
   const [loading, setLoading] = useState(true);
   const [commissionsLoading, setCommissionsLoading] = useState(false);
@@ -96,10 +106,26 @@ function AdminDashboard() {
           approvedTherapists: (data as any).approved_therapists,
           bookingStats: (data as any).booking_stats,
           newUsersWeek: (data as any).new_users_week,
-          newTherapistsWeek: (data as any).new_therapists_week
+          newTherapistsWeek: (data as any).new_therapists_week,
+          topupStats: (data as any).topup_stats || {
+            pending_count: 0,
+            pending_amount: 0,
+            approved_today_count: 0,
+            total_approved_amount: 0
+          }
         });
         setPendingTherapists((data as any).recent_pending_therapists || []);
         setNonApprovedTherapists((data as any).non_approved_therapists || []);
+      }
+
+      // Fetch pending top-ups
+      // Fetch all top-ups via admin RPC
+      const { data: topupsData, error: topupsError } = await supabase.rpc("get_all_topup_requests_admin");
+      
+      if (!topupsError && topupsData) {
+        const topups = topupsData as any[];
+        setPendingTopups(topups.filter(t => t.status === "pending") || []);
+        setTopupHistory(topups || []);
       }
 
       // Fetch Commissions (still using the table for now, but we could RPC this too if needed)
@@ -160,6 +186,29 @@ function AdminDashboard() {
     }
   };
 
+  const handleFixAdminRole = async () => {
+    const { error } = await supabase.rpc("make_me_admin");
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("You are now an admin! Refreshing...");
+      window.location.reload();
+    }
+  };
+
+  const handleTopupAction = async (id: string, status: "approved" | "rejected") => {
+    const { error } = await supabase.rpc("update_topup_status_admin", {
+      p_request_id: id,
+      p_status: status
+    });
+    
+    if (error) toast.error(error.message);
+    else {
+      toast.success(`Top-up ${status}!`);
+      fetchAllData();
+    }
+  };
+
   const StatCard = ({ title, value, icon: Icon, description, trend, trendValue }: any) => (
     <Card className="overflow-hidden border-black/[0.03] bg-white shadow-sm transition-all hover:shadow-md">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -186,12 +235,16 @@ function AdminDashboard() {
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-3xl font-bold tracking-tight">Overview</h2>
-        <div className="text-muted-foreground text-sm flex items-center gap-2">
-          Platform performance and system health monitor
-          <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-none font-bold text-[10px]">SYSTEM ONLINE</Badge>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
+          <p className="text-muted-foreground">Platform performance and pending approvals.</p>
         </div>
+        {!roles.includes("admin") && (
+          <Button variant="outline" size="sm" onClick={handleFixAdminRole} className="text-xs border-amber-200 text-amber-600 bg-amber-50">
+            Fix Admin Permissions
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-8">
@@ -238,7 +291,7 @@ function AdminDashboard() {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Booking Breakdown */}
             <Card className="lg:col-span-1 border-black/[0.03] bg-white shadow-sm">
               <CardHeader>
@@ -321,6 +374,65 @@ function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pending Top-ups */}
+            <Card className="lg:col-span-1 border-black/[0.03] bg-white shadow-sm">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Top-up Approvals</CardTitle>
+                  <CardDescription>Wallet balance additions</CardDescription>
+                </div>
+                <Badge className="bg-amber-500/10 text-amber-600 border-none font-bold text-[10px]">{stats.topupStats.pending_count}</Badge>
+              </CardHeader>
+              <CardContent>
+                {pendingTopups.length === 0 ? (
+                  <div className="h-[240px] flex flex-col items-center justify-center text-muted-foreground italic border-2 border-dashed border-black/[0.05] rounded-2xl">
+                    <Wallet className="h-8 w-8 mb-2 text-primary/40" />
+                    No pending top-ups
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingTopups.slice(0, 3).map((tp) => (
+                      <div key={tp.id} className="p-4 rounded-2xl border border-black/[0.03] bg-black/[0.01] space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-xs">
+                              {tp.profiles?.full_name?.charAt(0)}
+                            </div>
+                            <div className="text-xs font-bold">{tp.profiles?.full_name}</div>
+                          </div>
+                          <div className="text-sm font-bold text-primary">KES {Number(tp.amount).toLocaleString()}</div>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium">
+                          <span>{tp.method}</span>
+                          <span>{new Date(tp.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex gap-2 pt-1">
+                          <Button 
+                            className="flex-1 h-8 rounded-lg text-[10px] font-bold bg-emerald-600 hover:bg-emerald-700"
+                            onClick={() => handleTopupAction(tp.id, "approved")}
+                          >
+                            Approve
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            className="flex-1 h-8 rounded-lg text-[10px] font-bold border-rose-100 text-rose-600 hover:bg-rose-50"
+                            onClick={() => handleTopupAction(tp.id, "rejected")}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    {pendingTopups.length > 3 && (
+                      <Button variant="ghost" className="w-full text-[10px] font-bold text-muted-foreground" onClick={() => navigate({ to: "/admin/financials" })}>
+                        VIEW ALL {pendingTopups.length} REQUESTS
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -534,63 +646,72 @@ function AdminDashboard() {
             </Button>
           </div>
 
-          <Card className="border-black/[0.03] bg-white shadow-sm overflow-hidden rounded-2xl">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-black/[0.02] hover:bg-black/[0.02]">
-                  <TableHead className="font-bold py-4">Transaction Date</TableHead>
-                  <TableHead className="font-bold">Therapist</TableHead>
-                  <TableHead className="font-bold">Client</TableHead>
-                  <TableHead className="font-bold">Commission (15%)</TableHead>
-                  <TableHead className="font-bold">Total Paid</TableHead>
-                  <TableHead className="text-right font-bold pr-6">Reference</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {commissionsLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">
-                      <div className="flex flex-col items-center gap-2">
-                        <Clock className="h-6 w-6 animate-spin text-primary/40" />
-                        Loading financial data...
-                      </div>
-                    </TableCell>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="border-black/[0.03] bg-white shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="border-b border-black/[0.05] bg-slate-50/50">
+                <CardTitle className="text-lg">Recent Commissions</CardTitle>
+                <CardDescription>Earnings from session fees</CardDescription>
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-black/[0.01]">
+                    <TableHead className="font-bold py-4">Date</TableHead>
+                    <TableHead className="font-bold">Amount</TableHead>
+                    <TableHead className="text-right font-bold pr-6">Client</TableHead>
                   </TableRow>
-                ) : commissions.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">
-                      No financial records found.
-                    </TableCell>
+                </TableHeader>
+                <TableBody>
+                  {commissions.slice(0, 5).map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell className="py-4 text-xs">{new Date(c.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-bold text-primary text-sm">KES {Number(c.amount).toLocaleString()}</TableCell>
+                      <TableCell className="text-right pr-6 text-xs text-muted-foreground">{c.client?.full_name}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+
+            <Card className="border-black/[0.03] bg-white shadow-sm overflow-hidden rounded-2xl">
+              <CardHeader className="border-b border-black/[0.05] bg-slate-50/50 flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">Top-up History</CardTitle>
+                  <CardDescription>Recent wallet additions</CardDescription>
+                </div>
+                <Button variant="ghost" size="sm" className="text-xs text-primary" onClick={() => navigate({ to: "/admin/financials" })}>View All</Button>
+              </CardHeader>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-black/[0.01]">
+                    <TableHead className="font-bold py-4">User</TableHead>
+                    <TableHead className="font-bold">Amount</TableHead>
+                    <TableHead className="text-right font-bold pr-6">Status</TableHead>
                   </TableRow>
-                ) : (
-                  commissions.map((c) => (
-                    <TableRow key={c.id} className="hover:bg-black/[0.01] transition-colors">
-                      <TableCell className="py-4 text-sm font-medium">
-                        {new Date(c.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })}
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-bold text-sm text-black/80">{c.therapist?.full_name || 'System User'}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm font-medium text-black/60">{c.client?.full_name || 'Anonymous'}</div>
-                      </TableCell>
-                      <TableCell className="font-bold text-primary">
-                        KES {Number(c.amount).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-sm font-bold text-black/40">
-                        KES {(Number(c.amount) / 0.15).toLocaleString()}
-                      </TableCell>
+                </TableHeader>
+                <TableBody>
+                  {topupHistory.slice(0, 5).map((tp) => (
+                    <TableRow key={tp.id}>
+                      <TableCell className="py-4 text-xs font-bold">{tp.profiles?.full_name}</TableCell>
+                      <TableCell className="font-bold text-sm">KES {Number(tp.amount).toLocaleString()}</TableCell>
                       <TableCell className="text-right pr-6">
-                        <code className="text-[10px] bg-black/[0.05] text-black/60 px-2 py-1 rounded-lg font-mono uppercase">
-                          {c.booking_id?.split('-')[0]}
-                        </code>
+                        <Badge variant="outline" className={cn(
+                          "text-[9px] uppercase px-2 py-0",
+                          tp.status === "approved" ? "text-emerald-600 bg-emerald-50" : tp.status === "rejected" ? "text-rose-600 bg-rose-50" : "text-amber-600 bg-amber-50"
+                        )}>
+                          {tp.status}
+                        </Badge>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </Card>
+                  ))}
+                  {pendingTopups.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={3} className="h-32 text-center text-muted-foreground italic text-xs">No recent top-ups</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

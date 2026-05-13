@@ -7,8 +7,10 @@ import {
   Stethoscope, 
   Calendar, 
   DollarSign, 
+  Wallet,
   Settings, 
   LogOut,
+
   ChevronRight,
   Menu,
   X
@@ -60,6 +62,7 @@ function AdminLayout() {
     { label: "Applications", icon: Stethoscope, to: "/admin/applications" },
     { label: "Therapists", icon: Users, to: "/admin/therapists" },
     { label: "Financials", icon: DollarSign, to: "/admin/financials" },
+    { label: "Wallets", icon: Wallet, to: "/admin/wallets" },
     { label: "Bookings", icon: Calendar, to: "/admin/bookings" }, 
     { label: "Users", icon: Users, to: "/admin/users" },
     { label: "Settings", icon: Settings, to: "/admin" },

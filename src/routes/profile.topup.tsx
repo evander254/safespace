@@ -13,7 +13,10 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  ArrowRight
+  ArrowRight,
+  Save,
+  Trash2,
+  Star
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -25,6 +28,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/profile/topup")({
@@ -40,6 +52,29 @@ const PAYMENT_METHODS = [
 
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000];
 
+interface PaymentMethod {
+  id: string;
+  user_id: string;
+  type: string;
+  nickname: string | null;
+  details: {
+    phone?: string;
+    [key: string]: any;
+  };
+  is_default: boolean;
+  created_at: string;
+}
+
+interface TopUpRequest {
+  id: string;
+  user_id: string;
+  amount: number;
+  method: string;
+  reference_code: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+}
+
 function TopUpPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -47,6 +82,9 @@ function TopUpPage() {
   const [amount, setAmount] = useState<string>("");
   const [method, setMethod] = useState<string>("M-Pesa");
   const [reference, setReference] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [saveMethod, setSaveMethod] = useState(false);
+  const [methodNickname, setMethodNickname] = useState("");
 
   const { data: requests, isLoading: requestsLoading } = useQuery({
     queryKey: ["topup-requests", user?.id],
@@ -57,9 +95,53 @@ function TopUpPage() {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as TopUpRequest[];
     },
     enabled: !!user,
+  });
+
+  const { data: savedMethods, isLoading: methodsLoading } = useQuery({
+    queryKey: ["payment-methods", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("*")
+        .order("is_default", { ascending: false });
+      if (error) throw error;
+      return data as PaymentMethod[];
+    },
+    enabled: !!user,
+  });
+
+  const saveMethodMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) return;
+      const { error } = await supabase
+        .from("payment_methods")
+        .insert({
+          user_id: user.id,
+          type: method,
+          nickname: methodNickname || `${method} Method`,
+          details: method === "M-Pesa" ? { phone } : {},
+          is_default: (savedMethods?.length || 0) === 0
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
+    }
+  });
+
+  const deleteMethodMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("payment_methods").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Payment method deleted");
+      queryClient.invalidateQueries({ queryKey: ["payment-methods"] });
+    }
   });
 
   const submitTopupMutation = useMutation({
@@ -80,6 +162,10 @@ function TopUpPage() {
         });
 
       if (error) throw error;
+
+      if (saveMethod) {
+        await saveMethodMutation.mutateAsync();
+      }
     },
     onSuccess: () => {
       toast.success("Top-up request submitted for approval!");
@@ -136,6 +222,41 @@ function TopUpPage() {
                 <CardDescription>Select your preferred payment method and amount.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">
+                {/* Saved Methods */}
+                {savedMethods && savedMethods.length > 0 && (
+                  <div className="space-y-4">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Use Saved Method</Label>
+                    <div className="flex flex-wrap gap-3">
+                      {savedMethods.map((sm) => (
+                        <button
+                          key={sm.id}
+                          onClick={() => {
+                            setMethod(sm.type);
+                            if (sm.type === "M-Pesa") setPhone(sm.details?.phone || "");
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 rounded-xl border px-4 py-3 transition-all",
+                            method === sm.type && (sm.type !== "M-Pesa" || phone === sm.details?.phone)
+                              ? "border-primary bg-primary/5 text-primary shadow-sm"
+                              : "border-slate-100 bg-white text-slate-600 hover:border-slate-200"
+                          )}
+                        >
+                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-slate-100 shadow-sm">
+                            {sm.type === "M-Pesa" ? <Smartphone className="h-4 w-4" /> : sm.type === "Card" ? <CreditCard className="h-4 w-4" /> : <Building2 className="h-4 w-4" />}
+                          </div>
+                          <div className="text-left">
+                            <p className="text-[11px] font-bold leading-tight">{sm.nickname}</p>
+                            <p className="text-[9px] text-slate-400 font-medium">
+                              {sm.type === "M-Pesa" ? sm.details?.phone : sm.type}
+                            </p>
+                          </div>
+                          {sm.is_default && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Method Selection */}
                 <div className="space-y-4">
                   <Label className="text-xs font-bold uppercase tracking-widest text-slate-400">Select Method</Label>
@@ -143,7 +264,10 @@ function TopUpPage() {
                     {PAYMENT_METHODS.map((item) => (
                       <button
                         key={item.id}
-                        onClick={() => setMethod(item.id)}
+                        onClick={() => {
+                          setMethod(item.id);
+                          // Clear phone if switching away from M-Pesa or if not selecting a saved one
+                        }}
                         className={cn(
                           "group relative flex flex-col items-center gap-3 rounded-2xl border p-5 transition-all text-center",
                           method === item.id 
@@ -203,6 +327,45 @@ function TopUpPage() {
                     />
                   </div>
                 </div>
+
+                {/* Method Details */}
+                {method === "M-Pesa" && (
+                  <div className="space-y-4 rounded-2xl bg-slate-50/50 border border-slate-100 p-5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[11px] font-bold uppercase tracking-widest text-slate-400">M-Pesa Phone Number</Label>
+                      <Smartphone className="h-4 w-4 text-slate-300" />
+                    </div>
+                    <Input
+                      placeholder="e.g. 0712345678"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="rounded-xl h-11 border-slate-200 bg-white"
+                    />
+                    <div className="flex items-center gap-3">
+                      <Checkbox 
+                        id="save-method" 
+                        checked={saveMethod} 
+                        onCheckedChange={(checked) => setSaveMethod(!!checked)} 
+                        className="rounded-md border-slate-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                      />
+                      <div className="grid gap-1.5 leading-none">
+                        <Label htmlFor="save-method" className="text-sm font-semibold text-slate-700 cursor-pointer">Save this payment method</Label>
+                        <p className="text-[10px] text-slate-400 font-medium">Fast-track your future top-ups.</p>
+                      </div>
+                    </div>
+                    {saveMethod && (
+                      <div className="pt-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5 block">Method Nickname</Label>
+                        <Input
+                          placeholder="e.g. My M-Pesa"
+                          value={methodNickname}
+                          onChange={(e) => setMethodNickname(e.target.value)}
+                          className="rounded-xl h-10 border-slate-200 bg-white text-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Reference Code */}
                 <div className="space-y-4">
@@ -293,6 +456,45 @@ function TopUpPage() {
                 Contact Support
               </Button>
             </div>
+
+            {/* Manage Methods Dialog */}
+            {savedMethods && savedMethods.length > 0 && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" className="w-full rounded-xl h-10 text-[11px] font-bold text-slate-400 hover:text-primary transition-all">
+                    Manage Payment Methods
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] rounded-3xl">
+                  <DialogHeader>
+                    <DialogTitle>Saved Payment Methods</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 py-4">
+                    {savedMethods.map((sm) => (
+                      <div key={sm.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white border border-slate-200 shadow-sm">
+                            {sm.type === "M-Pesa" ? <Smartphone className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">{sm.nickname}</p>
+                            <p className="text-xs text-slate-500">{sm.type === "M-Pesa" ? sm.details?.phone : sm.type}</p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg"
+                          onClick={() => deleteMethodMutation.mutate(sm.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </main>

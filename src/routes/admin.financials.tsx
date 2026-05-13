@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   DollarSign, 
@@ -45,6 +45,7 @@ export const Route = createFileRoute("/admin/financials")({
 });
 
 function AdminFinancialsPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -52,28 +53,18 @@ function AdminFinancialsPage() {
   const { data: requests, isLoading } = useQuery({
     queryKey: ["admin-topup-requests"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("topup_requests")
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email,
-            avatar_url
-          )
-        `)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc("get_all_topup_requests_admin");
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: "approved" | "rejected" }) => {
-      const { error } = await supabase
-        .from("topup_requests")
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq("id", id);
+      const { error } = await supabase.rpc("update_topup_status_admin", {
+        p_request_id: id,
+        p_status: status
+      });
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
@@ -176,7 +167,12 @@ function AdminFinancialsPage() {
             <CardTitle className="text-xl font-bold">Manage Wallets</CardTitle>
           </CardHeader>
           <CardContent>
-            <Button variant="secondary" size="sm" className="w-full bg-white/10 hover:bg-white/20 border-none text-white text-xs font-bold">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="w-full bg-white/10 hover:bg-white/20 border-none text-white text-xs font-bold"
+              onClick={() => navigate({ to: "/admin/wallets" })}
+            >
               View All Wallets
             </Button>
           </CardContent>
