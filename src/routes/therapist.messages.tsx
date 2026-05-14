@@ -65,7 +65,7 @@ function TherapistMessages() {
     <div className="flex h-[calc(100vh-64px)] overflow-hidden bg-background">
       {/* Sidebar - List of Chats */}
       <div className={`
-        ${selectedChat && isMobile ? 'hidden' : 'flex'} 
+        ${selectedChat ? 'hidden md:flex' : 'flex'} 
         flex-col w-full md:w-[350px] lg:w-[400px] border-r border-border bg-card
       `}>
         <div className="p-6 border-b border-border space-y-4">
@@ -157,7 +157,7 @@ function TherapistMessages() {
 
       {/* Main Content - Chat Area */}
       <div className={`
-        ${!selectedChat && isMobile ? 'hidden' : 'flex'} 
+        ${!selectedChat ? 'hidden md:flex' : 'flex'} 
         flex-1 flex-col bg-muted/10 relative
       `}>
         <AnimatePresence mode="wait">

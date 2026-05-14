@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Send, 
@@ -16,6 +15,8 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { AlertCircle, Lock, ShieldAlert } from "lucide-react";
 
 interface Message {
   id: string;
@@ -35,6 +36,21 @@ interface ChatViewProps {
   onBack?: () => void;
 }
 
+// Contact detection logic (First Line of Defense)
+const containsContactInfo = (text: string) => {
+  const patterns = [
+    /(07|01)\d{8}/,               // Phone numbers (Kenya focus)
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/, // Full email
+    /@/,                          // Social handles/partial email
+    /https?:\/\/\S+/,             // Full links
+    /www\.\S+/,                   // www links
+    /wa\.me\/\S+/,                 // WhatsApp links
+    /t\.me\/\S+/,                  // Telegram links
+    /\.(com|net|org|co|me|io)/i   // Common domains
+  ];
+  return patterns.some(pattern => pattern.test(text));
+};
+
 export function ChatView({ 
   bookingId, 
   recipientId, 
@@ -43,12 +59,18 @@ export function ChatView({
   status,
   onBack 
 }: ChatViewProps) {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isRecipientOnline, setIsRecipientOnline] = useState(false);
+  const [isRecipientTyping, setIsRecipientTyping] = useState(false);
+  const [lastTypingTime, setLastTypingTime] = useState(0);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const channelRef = useRef<any>(null);
 
   // Fetch messages
   useEffect(() => {
@@ -86,50 +108,149 @@ export function ChatView({
 
     fetchMessages();
 
-    // Subscribe to new messages
+    // Real-time channel for messages, presence, and typing
     const channel = supabase
-      .channel(`chat:${bookingId}`)
+      .channel(`chat:${bookingId}`, {
+        config: {
+          presence: {
+            key: user?.id || 'anonymous',
+          },
+        },
+      })
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages",
           filter: `booking_id=eq.${bookingId}`,
         },
         (payload) => {
-          const newMsg = payload.new as Message;
-          setMessages((prev) => [...prev, newMsg]);
-          
-          // Mark as read if it's from the other person
-          if (newMsg.sender_id === recipientId) {
-            supabase
-              .from("messages")
-              .update({ is_read: true })
-              .eq("id", newMsg.id)
-              .then();
+          if (payload.eventType === "INSERT") {
+            const newMsg = payload.new as Message;
+            setMessages((prev) => {
+              if (prev.some(m => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+            
+            // Mark as read if it's from the other person
+            if (newMsg.sender_id === recipientId) {
+              supabase
+                .from("messages")
+                .update({ is_read: true })
+                .eq("id", newMsg.id)
+                .then();
+            }
+          } else if (payload.eventType === "UPDATE") {
+            const updatedMsg = payload.new as Message;
+            setMessages((prev) => 
+              prev.map((msg) => (msg.id === updatedMsg.id ? updatedMsg : msg))
+            );
           }
         }
       )
-      .subscribe();
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const recipientInRoom = Object.values(state).some(
+          (presence: any) => presence[0]?.user_id === recipientId
+        );
+        setIsRecipientOnline(recipientInRoom);
+      })
+      .on("broadcast", { event: "typing" }, (payload) => {
+        if (payload.payload.user_id === recipientId) {
+          setIsRecipientTyping(payload.payload.isTyping);
+          
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          if (payload.payload.isTyping) {
+            // Play a very subtle sound when typing starts? (Maybe too much, let's skip typing sound)
+            typingTimeoutRef.current = setTimeout(() => {
+              setIsRecipientTyping(false);
+            }, 3000);
+          }
+        }
+      })
+      .on("broadcast", { event: "new_message" }, (payload) => {
+        if (payload.payload.sender_id === recipientId) {
+          // Play notification sound
+          const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+          audio.volume = 0.5;
+          audio.play().catch(e => console.log("Sound play failed", e));
+        }
+      })
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED" && user?.id) {
+          await channel.track({
+            user_id: user.id,
+            online_at: new Date().toISOString(),
+          });
+        }
+      });
+
+    channelRef.current = channel;
 
     return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       supabase.removeChannel(channel);
     };
-  }, [bookingId, recipientId]);
+  }, [bookingId, recipientId, user?.id]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, isRecipientTyping]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || isSending) return;
+    const messageText = newMessage.trim();
+    if (!messageText || !user || isSending) return;
+
+    // Contact sharing block (First Line of Defense)
+    if (containsContactInfo(messageText)) {
+      toast.error(
+        "For your safety and privacy, sharing contact details is not allowed.",
+        {
+          icon: <ShieldAlert className="h-4 w-4 text-destructive" />,
+          duration: 6000,
+          description: "Please keep all communications within the Safe Space platform."
+        }
+      );
+      return;
+    }
+
+    if (status !== "confirmed") {
+      const isTherapist = roles.includes("therapist");
+      toast.error(
+        isTherapist 
+          ? "You must confirm this booking before you can chat with the client."
+          : "Please wait for the therapist to confirm your booking before you can send messages.",
+        {
+          icon: <AlertCircle className="h-4 w-4" />,
+          duration: 5000,
+        }
+      );
+      return;
+    }
 
     setIsSending(true);
+    
+    // Stop typing indicator when sending
+    if (channelRef.current) {
+      channelRef.current.send({
+        type: "broadcast",
+        event: "typing",
+        payload: { user_id: user.id, isTyping: false },
+      });
+      
+      // Notify other side to play sound
+      channelRef.current.send({
+        type: "broadcast",
+        event: "new_message",
+        payload: { sender_id: user.id },
+      });
+    }
+
     try {
       const { error } = await supabase.from("messages").insert({
         booking_id: bookingId,
@@ -165,8 +286,10 @@ export function ChatView({
           <div>
             <h3 className="font-semibold text-sm">{recipientName}</h3>
             <div className="flex items-center gap-1.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Online</span>
+              <div className={`h-1.5 w-1.5 rounded-full ${isRecipientOnline ? "bg-green-500 animate-pulse" : "bg-slate-300"}`} />
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                {isRecipientOnline ? "Online" : "Offline"}
+              </span>
             </div>
           </div>
         </div>
@@ -206,7 +329,6 @@ export function ChatView({
           </div>
         ) : (
           <div className="space-y-4">
-             {/* Group messages by date could be added here */}
              <AnimatePresence initial={false}>
                {messages.map((msg) => {
                  const isMe = msg.sender_id === user?.id;
@@ -233,7 +355,7 @@ export function ChatView({
                            {format(new Date(msg.created_at), "HH:mm")}
                          </span>
                          {isMe && (
-                            <div className={`h-1 w-1 rounded-full ${msg.is_read ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                            <div className={`h-1 w-1 rounded-full ${msg.is_read ? "bg-primary" : "bg-muted-foreground/30"} transition-colors duration-300`} />
                          )}
                        </div>
                      </div>
@@ -243,10 +365,39 @@ export function ChatView({
              </AnimatePresence>
           </div>
         )}
+        
+        {/* Typing Indicator Overlay */}
+        <AnimatePresence>
+          {isRecipientTyping && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="flex items-center gap-2 px-2 py-1"
+            >
+              <div className="flex gap-1 bg-muted/30 px-3 py-2 rounded-2xl rounded-tl-none border border-border/50">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:-0.3s]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce [animation-delay:-0.15s]"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-primary/40 animate-bounce"></span>
+              </div>
+              <span className="text-[10px] font-medium text-muted-foreground italic">{recipientName} is typing...</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Input Area */}
       <div className="p-4 border-t border-border bg-card/80 backdrop-blur-md">
+        {status !== "confirmed" && !isEnded && (
+          <div className="mb-3 flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 animate-in fade-in slide-in-from-bottom-2">
+            <Lock className="h-4 w-4 shrink-0" />
+            <p className="text-[11px] font-medium leading-tight">
+              {roles.includes("therapist") 
+                ? "Confirm this booking to enable real-time messaging with your client."
+                : "Messaging will be enabled once your therapist confirms the booking."}
+            </p>
+          </div>
+        )}
         {isEnded ? (
           <div className="flex flex-col items-center justify-center py-2 px-4 bg-muted/50 rounded-2xl border border-border/50">
              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Conversation Ended</p>
@@ -256,7 +407,22 @@ export function ChatView({
           <form onSubmit={handleSendMessage} className="flex items-center gap-2">
             <Input
               value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
+              onChange={(e) => {
+                setNewMessage(e.target.value);
+                
+                // Broadcast typing status
+                const now = Date.now();
+                if (now - lastTypingTime > 2000) {
+                  setLastTypingTime(now);
+                  if (channelRef.current) {
+                    channelRef.current.send({
+                      type: "broadcast",
+                      event: "typing",
+                      payload: { user_id: user?.id, isTyping: true },
+                    });
+                  }
+                }
+              }}
               placeholder="Type a message..."
               className="flex-1 h-11 rounded-full bg-muted/30 border-border/50 focus-visible:ring-primary/20"
               disabled={isSending}

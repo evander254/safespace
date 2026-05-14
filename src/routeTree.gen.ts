@@ -15,6 +15,7 @@ import { Route as TherapistRouteImport } from './routes/therapist'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as BookingsRouteImport } from './routes/bookings'
@@ -68,6 +69,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MessagesRoute = MessagesRouteImport.update({
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof BookingsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof BookingsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/therapist-onboarding': typeof TherapistOnboardingRoute
@@ -259,6 +267,7 @@ export interface FileRoutesById {
   '/bookings': typeof BookingsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/messages': typeof MessagesRoute
+  '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/profile': typeof ProfileRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/forgot-password'
     | '/messages'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/forgot-password'
     | '/messages'
+    | '/notifications'
     | '/onboarding'
     | '/reset-password'
     | '/therapist-onboarding'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/forgot-password'
     | '/messages'
+    | '/notifications'
     | '/onboarding'
     | '/profile'
     | '/reset-password'
@@ -386,6 +398,7 @@ export interface RootRouteChildren {
   BookingsRoute: typeof BookingsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   MessagesRoute: typeof MessagesRoute
+  NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   ProfileRoute: typeof ProfileRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -436,6 +449,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/messages': {
@@ -689,6 +709,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookingsRoute: BookingsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   MessagesRoute: MessagesRoute,
+  NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   ProfileRoute: ProfileRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
